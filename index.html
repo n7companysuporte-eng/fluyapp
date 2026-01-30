@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fluy • Controle Financeiro</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{
+  --green:#16a34a;
+  --yellow:#facc15;
+  --bg:#f1f5f9;
+  --dark:#020617;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:'Inter',sans-serif;
+  background:var(--bg);
+  color:#020617;
+}
+.dark{background:#020617;color:#fff}
+.app{max-width:430px;margin:auto;min-height:100vh;padding-bottom:40px}
+
+/* HEADER / LOGO */
+header{
+  padding:20px 16px 10px;
+  display:flex;
+  justify-content:center;
+}
+.logo-box{text-align:center}
+.logo-circle{
+  width:64px;height:64px;border-radius:50%;
+  background:linear-gradient(135deg,var(--green),var(--yellow));
+  display:flex;align-items:center;justify-content:center;
+  margin:auto;
+  animation:float 2.5s ease-in-out infinite
+}
+.logo-circle span{font-size:28px}
+.logo-box strong{display:block;margin-top:6px;font-size:22px}
+@keyframes float{0%{transform:translateY(0)}50%{transform:translateY(-8px)}100%{transform:translateY(0)}}
+
+/* CARD */
+.card{
+  background:#fff;
+  margin:14px 16px;
+  padding:16px;
+  border-radius:22px;
+  box-shadow:0 12px 35px rgba(0,0,0,.12)
+}
+.dark .card{background:#020617}
+
+/* SALDO */
+.saldo-label{opacity:.7;font-size:14px}
+.saldo{font-size:34px;font-weight:700;margin:6px 0}
+
+.actions{display:flex;gap:12px;margin-top:14px}
+.btn{
+  flex:1;padding:14px;border-radius:18px;border:none;
+  font-weight:700;cursor:pointer;transition:.2s
+}
+.btn:active{transform:scale(.95)}
+.receita{background:var(--green);color:#fff}
+.despesa{background:#dc2626;color:#fff}
+
+/* CATEGORIAS */
+.categorias{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.cat{
+  padding:12px 6px;border-radius:16px;font-size:13px;font-weight:600;
+  text-align:center;cursor:pointer;transition:.2s;color:#fff
+}
+.cat:active{transform:scale(.92)}
+
+/* LIMITE */
+.progress{height:14px;background:#e5e7eb;border-radius:10px;overflow:hidden;margin-top:10px}
+.bar{height:100%;width:0%;background:var(--green);transition:.4s}
+.percent{font-size:13px;margin-top:4px;opacity:.7}
+
+/* LISTA */
+.item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #e5e7eb;font-size:14px}
+.item small{opacity:.6}
+
+/* FEEDBACK */
+.msg{text-align:center;font-weight:600;margin-top:10px;animation:slide .4s}
+@keyframes slide{from{opacity:0;transform:translateY(8px)}to{opacity:1}}
+</style>
+</head>
+<body>
+<div class="app">
+
+<header>
+  <div class="logo-box">
+    <div class="logo-circle"><span>💸</span></div>
+    <strong>Fluy</strong>
+  </div>
+</header>
+
+<div class="card">
+  <div class="saldo-label">Saldo disponível (mês)</div>
+  <div class="saldo" id="saldo">R$ 0,00</div>
+  <div class="actions">
+    <button class="btn receita" onclick="toggleReceita()">+ Receita</button>
+    <button class="btn despesa" onclick="toggleDespesa()">- Despesa</button>
+  </div>
+  <div class="msg" id="msg"></div>
+</div>
+
+<div class="card" id="receitaBox" style="display:none">
+  <strong>Adicionar Receita</strong>
+  <input id="valorReceita" type="number" placeholder="Valor" style="width:100%;padding:14px;border-radius:14px;margin-top:10px">
+  <div class="categorias">
+    <div class="cat" style="background:#16a34a" onclick="addReceita('Salário')">💼 Salário</div>
+    <div class="cat" style="background:#22c55e" onclick="addReceita('Renda extra')">⚡ Extra</div>
+    <div class="cat" style="background:#4ade80" onclick="addReceita('Freelance')">🧑‍💻 Freelance</div>
+  </div>
+</div>
+
+<div class="card" id="despesaBox" style="display:none">
+  <strong>Adicionar Despesa</strong>
+  <input id="valorDespesa" type="number" placeholder="Valor" style="width:100%;padding:14px;border-radius:14px;margin-top:10px">
+  <div class="categorias">
+    <div class="cat" style="background:#2563eb" onclick="addDespesa('Moradia')">🏠 Moradia</div>
+    <div class="cat" style="background:#f97316" onclick="addDespesa('Alimentação')">🍔 Alimentação</div>
+    <div class="cat" style="background:#a855f7" onclick="addDespesa('Transporte')">🚗 Transporte</div>
+    <div class="cat" style="background:#ec4899" onclick="addDespesa('Lazer')">🎉 Lazer</div>
+    <div class="cat" style="background:#22c55e" onclick="addDespesa('Saúde')">🏥 Saúde</div>
+    <div class="cat" style="background:#eab308" onclick="addDespesa('Educação')">📚 Educação</div>
+  </div>
+</div>
+
+<div class="card">
+  <strong>Limite de gastos mensais</strong>
+  <input id="limite" type="number" placeholder="Definir limite" style="width:100%;padding:14px;border-radius:14px;margin-top:10px">
+  <div class="progress"><div class="bar" id="bar"></div></div>
+  <div class="percent" id="percent">0%</div>
+</div>
+
+<div class="card">
+  <strong>Resumo financeiro</strong>
+  <canvas id="chart"></canvas>
+</div>
+
+<div class="card">
+  <strong>Lançamentos</strong>
+  <div id="lista"></div>
+</div>
+
+</div>
+
+<script>
+let receitas=JSON.parse(localStorage.getItem('r'))||[]
+let despesas=JSON.parse(localStorage.getItem('d'))||[]
+let limite=localStorage.getItem('l')||0
+const msgsR=["Boa! Receita entrou 💰","Dinheiro chegando 😎","Fluxo positivo 🚀"]
+const msgsD=["Saiu um pouco 😅","Despesa registrada","O bolso sentiu 💸"]
+
+function salvar(){localStorage.setItem('r',JSON.stringify(receitas));localStorage.setItem('d',JSON.stringify(despesas));localStorage.setItem('l',limite)}
+
+function atualizar(){
+  const tr=receitas.reduce((a,b)=>a+b.v,0)
+  const td=despesas.reduce((a,b)=>a+b.v,0)
+  saldo.innerText=(tr-td).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
+  const p=limite?Math.min((td/limite)*100,100):0
+  bar.style.width=p+'%'
+  percent.innerText=Math.floor(p)+'%'
+  renderLista();renderChart(tr,td);salvar()
+}
+
+function toggleReceita(){receitaBox.style.display=receitaBox.style.display==='none'?'block':'none';despesaBox.style.display='none'}
+function toggleDespesa(){despesaBox.style.display=despesaBox.style.display==='none'?'block':'none';receitaBox.style.display='none'}
+
+function addReceita(cat){const v=+valorReceita.value;if(!v)return;receitas.push({v,cat});msg.innerText=msgsR[Math.floor(Math.random()*msgsR.length)];valorReceita.value='';atualizar()}
+function addDespesa(cat){const v=+valorDespesa.value;if(!v)return;despesas.push({v,cat});msg.innerText=msgsD[Math.floor(Math.random()*msgsD.length)];valorDespesa.value='';atualizar()}
+
+function renderLista(){lista.innerHTML='';despesas.forEach((d,i)=>{lista.innerHTML+=`<div class='item'><div>${d.cat}<br><small>R$ ${d.v}</small></div><button onclick='del(${i})'>❌</button></div>`})}
+function del(i){despesas.splice(i,1);atualizar()}
+
+let g
+function renderChart(r,d){if(g)g.destroy();g=new Chart(chart,{type:'doughnut',data:{labels:['Receita','Despesa'],datasets:[{data:[r,d],backgroundColor:['#16a34a','#dc2626']}]} })}
+
+limite.onchange=e=>{limite=+e.target.value;atualizar()}
+atualizar()
+</script>
+</body>
+</html>
